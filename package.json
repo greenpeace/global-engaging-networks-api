@@ -1,0 +1,21 @@
+{
+  "name": "engaging-networks-api",
+  "version": "1.0.0",
+  "description": "Engaging Networks API for Node.js",
+  "main": "enapi.js",
+  "dependencies": {
+    "babyparse": "^0.4.5",
+    "log4js": "^0.6.35",
+    "moment-timezone": "^0.5.3",
+    "request": "^2.72.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Engaging Networks"
+  ],
+  "author": "Andrey Makhnutin <andrey.makhnutin@gmail.com>",
+  "license": "ISC"
+}
