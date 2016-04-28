@@ -4,12 +4,12 @@ const request = require('request');
 const logger = require('log4js').getLogger('engaging-networks-api');
 const fs = require('fs');
 const moment = require('moment-timezone');
-const ENTransactionCSVReader = require('./entr.js');
+const ENTransactionCSVReader = require('./transaction-csv-reader.js');
 
 const TIME_ZONE = "America/New_York";
 const MAX_DAYS_AGO = 30;
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 class ENAPI {
     constructor(config) {
@@ -40,6 +40,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
             return;
         }
 
+        // end date is inclusive, say so in the logs
         const trueEndDate = this.ENDateEnd.clone().add(1, 'days').subtract(1, 'ms');
         logger.info(`downloading transactions from ${this.ENDateStart.toISOString()} to ${trueEndDate.toISOString()}`);
 
@@ -53,6 +54,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
         let backupFileStream = null;
         let backupFileName = null;
         if (options && options.backupDir) {
+            // the user might choose to backup downloaded transactions file on the disk by specifying backupDir option
             const now = moment().tz('UTC');
             backupFileName = options.backupDir + '/' + now.format('YYYY-MM-DD-hh-mm') + '_' + this.ENDateStart.format('YYYY-MM-DD');
             if (!this.ENDateStart.isSame(this.ENDateEnd)) backupFileName += '_' + ENDateEnd.format('YYYY-MM-DD');
@@ -61,7 +63,6 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
 
             logger.info(`saving downloaded transactions into backup file ${backupFileName}`);
             backupFileStream = fs.createWriteStream(backupFileName);
-            backupFileStream.on('error', err => this.emit('error', err));
         }
 
         const requestOptions = {
@@ -98,7 +99,13 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
         });
 
         csvStream.pipe(this);
-        if (backupFileStream) csvStream.pipe(backupFileStream);
+        if (backupFileStream) {
+            csvStream.pipe(backupFileStream);
+            backupFileStream.on('error', err => {
+                this.emit('error', err);
+                csvStream.pause();
+            });
+        }
     }
 
     _transform(chunk, encoding, callback) {
@@ -159,5 +166,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
 
 ENAPI.TIME_ZONE = TIME_ZONE;
 ENAPI.MAX_DAYS_AGO = MAX_DAYS_AGO;
+
+ENAPI.ENTransactionCSVReader = ENTransactionCSVReader;
 
 module.exports = ENAPI;

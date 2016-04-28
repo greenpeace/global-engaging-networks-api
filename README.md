@@ -36,3 +36,34 @@ Download transactions for a specified time period, from `dateStart` to `dateEnd`
 Returns an instance of `ENAPI#ENTransactionDownloader` which is essentially a readable stream emitting parsed transaction objects one at a time. A subclass of `ENAPI#ENTransactionCSVReader`.
 
     const transactionDownloader = enapi.DownloadTransactions('2016-04-23', '2016-04-23', { backupDir: 'downloaded' });
+
+### ENAPI#ENTransactionDownloader
+
+This class should not be instantiated directly and thus is not exported by this package. Instead, it is returned by the `ENAPI.DownloadTransactions` call.
+
+This class is a subclass of `Stream.Readable` in object mode, and it emits parsed transaction objects in 'data' events.
+
+#### ENTransactionDownloader.on('error', (err) => { ... })
+
+When downloading transactions over the internet plenty of things can go wrong. This event is emitted when some of these things happen:
+
+* You specify invalid start or end date to the `ENAPI.DownloadTransactions` call
+* You don't specify a private token or EN rejects your private token
+* The connection can't be made, or connection is reset
+* The connection is interrupted and you receive incomplete file
+* There was an error during parsing of a CSV file. Most likely caused by connection issues
+* You wanted to save downloaded file to a backup directory but I/O error occured
+
+So it is of utmost importance that you listen to this event and expect it to fire from time to time.
+
+#### ENTransactionDownloader.on('data', (transaction) => { ... })
+
+In this event you get your transactions. `transaction` is an object emitted by `ENAPI#ENTransactionCSVReader`. For now they are just plain objects with transaction fields represented as object properties.
+
+#### ENTransactionDownloader.on('end', () => { ... })
+
+This event should fire if and only if the file was completely downloaded and parsed with no errors.
+
+### ENAPI#ENTransactionCSVReader
+
+Subclass of `Stream.Transform` that is designed to consume CSV and emit parsed transaction objects

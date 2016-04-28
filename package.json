@@ -1,6 +1,6 @@
 {
   "name": "engaging-networks-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Engaging Networks API for Node.js",
   "main": "enapi.js",
   "dependencies": {
@@ -17,5 +17,10 @@
     "Engaging Networks"
   ],
   "author": "Andrey Makhnutin <andrey.makhnutin@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:greenpeace/engaging-networks-api.git"
+  },
+
 }
