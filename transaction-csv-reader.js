@@ -23,6 +23,8 @@ class ENTransactionCSVReader extends Stream.Transform {
             newline: '\n',
             header: false
         };
+        if (options && options.delimiter)
+            this._csvConfig.delimiter = options.delimiter;
 
         this._fieldNames = undefined;
 

@@ -10,7 +10,14 @@ const MAX_DAYS_AGO = 30;
 
 class ENTransactionDownloader extends ENTransactionCSVReader {
     constructor(dateStart, dateEnd, options, enapi) {
-        super();
+        const csvReaderOptions = {};
+
+        if (options) {
+            if (options.csvDelimiter !== undefined)
+                csvReaderOptions.delimiter = options.csvDelimiter;
+        }
+
+        super(csvReaderOptions);
 
         this.enapi = enapi;
         this.EN_TIME_ZONE = enapi.constructor.TIME_ZONE;
@@ -18,7 +25,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
 
         const argsErr = this._checkArgs(dateStart, dateEnd, options);
         if (argsErr) {
-            this.emit('error', argsErr);
+            process.nextTick( () => this.emit('error', argsErr) );
             return;
         }
 
@@ -29,7 +36,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
         const privateToken = options && options.privateToken || enapi.privateToken;
         if (!privateToken) {
             const e = new Error("private token is required");
-            this.emit('error', e);
+            process.nextTick( () => this.emit('error', e) );
             return;
         }
 
@@ -38,7 +45,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
         if (options && options.backupDir) {
             // the user might choose to backup downloaded transactions file on the disk by specifying backupDir option
             const now = moment().tz('UTC');
-            backupFileName = options.backupDir + '/' + now.format('YYYY-MM-DD-hh-mm') + '_' + this.ENDateStart.format('YYYY-MM-DD');
+            backupFileName = options.backupDir + '/' + now.format('YYYY-MM-DD-HH-mm') + '_' + this.ENDateStart.format('YYYY-MM-DD');
             if (!this.ENDateStart.isSame(this.ENDateEnd)) backupFileName += '_' + ENDateEnd.format('YYYY-MM-DD');
             backupFileName += '.csv';
             this.backupFileName = backupFileName
@@ -48,7 +55,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
         }
 
         const requestOptions = {
-            url: `https://www.e-activist.com/ea-dataservice/export.service?token=${privateToken}` +
+            url: `https://www.e-activist.com/ea-dataservice/export.service?type=CSV&token=${privateToken}` +
                     `&startDate=${this.ENDateStart.format('MMDDYYYY')}&endDate=${this.ENDateEnd.format('MMDDYYYY')}`,
             headers: {
                 'User-Agent': `node.js engaging-networks-api v${this.ENAPI_VERSION}`
@@ -74,10 +81,11 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
             if (response.headers['total'] === undefined) {
                 logger.warn('server did not send the Total header');
                 this.recordsExpected = null;
-                return;
+            } else {
+                this.recordsExpected = response.headers['total'];
+                logger.info(`received response, expecting ${this.recordsExpected} records`);
             }
-            this.recordsExpected = response.headers['total'];
-            logger.info(`received response, expecting ${this.recordsExpected} records`);
+            this.emit('start', this.recordsExpected);
         });
 
         csvStream.pipe(this);
@@ -134,8 +142,8 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
 
         let ENStartOfToday = moment().tz(this.EN_TIME_ZONE).startOf('day');
 
-        if (ENDateEnd.isAfter(ENStartOfToday)) {
-            return new Error(`dateEnd is later than the beginning of a current day in EN timezone ${ENStartOfToday.format("YYYY-MM-DD")})`);
+        if (ENDateEnd.isSameOrAfter(ENStartOfToday)) {
+            return new Error(`dateEnd is later than the beginning of a current day in EN timezone (${ENStartOfToday.format("YYYY-MM-DD")})`);
         }
 
         let ENMinAllowedDay = ENStartOfToday.clone().add(-1 * MAX_DAYS_AGO, 'days');
