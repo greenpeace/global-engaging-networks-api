@@ -1,6 +1,6 @@
 {
   "name": "engaging-networks-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Engaging Networks API for Node.js",
   "main": "enapi.js",
   "dependencies": {
