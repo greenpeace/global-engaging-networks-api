@@ -46,7 +46,7 @@ class ENTransactionDownloader extends ENTransactionCSVReader {
             // the user might choose to backup downloaded transactions file on the disk by specifying backupDir option
             const now = moment().tz('UTC');
             backupFileName = options.backupDir + '/' + now.format('YYYY-MM-DD-HH-mm') + '_' + this.ENDateStart.format('YYYY-MM-DD');
-            if (!this.ENDateStart.isSame(this.ENDateEnd)) backupFileName += '_' + ENDateEnd.format('YYYY-MM-DD');
+            if (!this.ENDateStart.isSame(this.ENDateEnd)) backupFileName += '_' + this.ENDateEnd.format('YYYY-MM-DD');
             backupFileName += '.csv';
             this.backupFileName = backupFileName
 
