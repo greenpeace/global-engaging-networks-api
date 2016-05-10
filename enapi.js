@@ -5,7 +5,7 @@ const ENTransactionDownloader = require('./transaction-downloader.js');
 
 const TIME_ZONE = "America/New_York";
 
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 
 class ENAPI {
     constructor(config) {
